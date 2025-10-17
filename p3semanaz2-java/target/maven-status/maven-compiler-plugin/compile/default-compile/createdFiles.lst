@@ -1,0 +1,14 @@
+com\mycompany\p3semanaz1\Publicacion.class
+com\mycompany\p3semanaz1\estandarIEEE\Libro.class
+com\mycompany\p3semanaz1\estandarAPA\Articulo.class
+com\mycompany\p3semanaz1\estandarIEEE\Tesis.class
+com\mycompany\p3semanaz1\estandarIEEE\Articulo.class
+com\mycompany\p3semanaz1\estandarIEEE\ConcreteFactoryIEEE.class
+com\mycompany\p3semanaz1\AbstractFactoryPublicacion.class
+com\mycompany\p3semanaz1\P3semanaz1.class
+com\mycompany\p3semanaz1\Clase_de_Tesis.class
+com\mycompany\p3semanaz1\Autor.class
+com\mycompany\p3semanaz1\estandarAPA\Tesis$1.class
+com\mycompany\p3semanaz1\estandarAPA\ConcreteFactoryAPA.class
+com\mycompany\p3semanaz1\estandarAPA\Libro.class
+com\mycompany\p3semanaz1\estandarAPA\Tesis.class
