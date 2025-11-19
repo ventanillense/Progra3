@@ -1,0 +1,341 @@
+¡Claro! Te marco los cambios específicos:
+
+## 📄 Cambios en `.aspx`
+
+### ✏️ **Sección de contraseña (líneas ~45-55 aproximadamente)**
+
+**ANTES:**
+```aspx
+<div class="mb-3">
+    <label for="txtContraseña" class="fw-semibold">Contraseña nueva</label>
+    <asp:TextBox ID="txtContraseña" runat="server" CssClass="form-control" 
+        TextMode="Password" placeholder="Contraseña"></asp:TextBox>
+</div>
+```
+
+**DESPUÉS:**
+```aspx
+<div class="mb-3">
+    <label for="txtContraseña" class="fw-semibold">Contraseña nueva</label>
+    <asp:TextBox ID="txtContraseña" runat="server" CssClass="form-control" 
+        TextMode="Password" placeholder="Contraseña" onkeyup="validarPasswordJS()"></asp:TextBox>  ⬅️ AGREGADO
+    
+    ⬇️ TODO ESTO ES NUEVO ⬇️
+    <%-- Mensaje de validación en tiempo real --%>
+    <div id="mensajePassword" class="small mt-2"></div>
+    
+    <%-- Validador requerido --%>
+    <asp:RequiredFieldValidator ID="rfvContraseña" runat="server" 
+        ControlToValidate="txtContraseña"
+        ErrorMessage="La contraseña es obligatoria"
+        Display="Dynamic"
+        CssClass="text-danger small"
+        ForeColor="Red">
+    </asp:RequiredFieldValidator>
+    
+    <%-- Validador personalizado --%>
+    <asp:CustomValidator ID="cvContraseña" runat="server"
+        ControlToValidate="txtContraseña"
+        OnServerValidate="ValidarContraseña"
+        Display="Dynamic"
+        CssClass="text-danger small"
+        ForeColor="Red">
+    </asp:CustomValidator>
+    ⬆️ FIN DE LO NUEVO ⬆️
+</div>
+```
+
+### ✏️ **Sección de confirmar contraseña**
+
+**ANTES:**
+```aspx
+<div class="mb-3">
+    <label for="txtConfirmarContraseña" class="fw-semibold">Ingrese nuevamente su contraseña</label>
+    <asp:TextBox ID="txtConfirmarContraseña" runat="server" CssClass="form-control" 
+        TextMode="Password" placeholder="Confirmar contraseña"></asp:TextBox>
+</div>
+```
+
+**DESPUÉS:**
+```aspx
+<div class="mb-3">
+    <label for="txtConfirmarContraseña" class="fw-semibold">Ingrese nuevamente su contraseña</label>
+    <asp:TextBox ID="txtConfirmarContraseña" runat="server" CssClass="form-control" 
+        TextMode="Password" placeholder="Confirmar contraseña"></asp:TextBox>
+    
+    ⬇️ ESTO ES NUEVO ⬇️
+    <%-- Validador de comparación --%>
+    <asp:CompareValidator ID="cvConfirmarContraseña" runat="server"
+        ControlToValidate="txtConfirmarContraseña"
+        ControlToCompare="txtContraseña"
+        Operator="Equal"
+        ErrorMessage="Las contraseñas no coinciden"
+        Display="Dynamic"
+        CssClass="text-danger small"
+        ForeColor="Red">
+    </asp:CompareValidator>
+    ⬆️ FIN DE LO NUEVO ⬆️
+</div>
+```
+
+### ✏️ **Script JavaScript (COMPLETAMENTE NUEVO)**
+
+Agregar **ANTES de** `</asp:Content>`:
+
+```aspx
+⬇️ TODO ESTE BLOQUE ES NUEVO ⬇️
+<script type="text/javascript">
+    function validarPasswordJS() {
+        var password = document.getElementById('<%= txtContraseña.ClientID %>').value;
+        var mensaje = document.getElementById('mensajePassword');
+        var requisitos = [];
+        var cumplidos = [];
+
+        if (password.length < 8) {
+            requisitos.push('✗ Mínimo 8 caracteres');
+        } else {
+            cumplidos.push('✓ Mínimo 8 caracteres');
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            requisitos.push('✗ Una letra mayúscula');
+        } else {
+            cumplidos.push('✓ Una letra mayúscula');
+        }
+
+        if (!/[a-z]/.test(password)) {
+            requisitos.push('✗ Una letra minúscula');
+        } else {
+            cumplidos.push('✓ Una letra minúscula');
+        }
+
+        if (!/[0-9]/.test(password)) {
+            requisitos.push('✗ Un número');
+        } else {
+            cumplidos.push('✓ Un número');
+        }
+
+        if (!/[@$!%*?&#]/.test(password)) {
+            requisitos.push('✗ Un carácter especial (@$!%*?&#)');
+        } else {
+            cumplidos.push('✓ Un carácter especial (@$!%*?&#)');
+        }
+
+        if (password.length === 0) {
+            mensaje.innerHTML = '';
+        } else if (requisitos.length > 0) {
+            mensaje.innerHTML = '<span style="color: #dc3545;">' + requisitos.join('<br>') + '</span>' +
+                              (cumplidos.length > 0 ? '<br><span style="color: #28a745;">' + cumplidos.join('<br>') + '</span>' : '');
+        } else {
+            mensaje.innerHTML = '<span style="color: #28a745;">✓ Contraseña válida</span>';
+        }
+    }
+</script>
+⬆️ FIN DEL BLOQUE NUEVO ⬆️
+```
+
+---
+
+## 📄 Cambios en `.aspx.cs`
+
+### ✏️ **Agregar using (al inicio del archivo)**
+
+**ANTES:**
+```csharp
+using SquirlearnWA.personaSOAP;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+```
+
+**DESPUÉS:**
+```csharp
+using SquirlearnWA.personaSOAP;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;  ⬅️ AGREGADO
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+```
+
+### ✏️ **Método COMPLETAMENTE NUEVO** (agregar antes de `btnRegistrar_Click`)
+
+```csharp
+⬇️ TODO ESTE MÉTODO ES NUEVO ⬇️
+// Método de validación de contraseña
+protected void ValidarContraseña(object source, ServerValidateEventArgs args)
+{
+    string password = args.Value;
+    List<string> errores = new List<string>();
+
+    // Validar longitud mínima
+    if (password.Length < 8)
+    {
+        errores.Add("mínimo 8 caracteres");
+    }
+
+    // Validar mayúscula
+    if (!password.Any(char.IsUpper))
+    {
+        errores.Add("al menos una mayúscula");
+    }
+
+    // Validar minúscula
+    if (!password.Any(char.IsLower))
+    {
+        errores.Add("al menos una minúscula");
+    }
+
+    // Validar número
+    if (!password.Any(char.IsDigit))
+    {
+        errores.Add("al menos un número");
+    }
+
+    // Validar carácter especial
+    if (!Regex.IsMatch(password, @"[@$!%*?&#]"))
+    {
+        errores.Add("al menos un carácter especial (@$!%*?&#)");
+    }
+
+    if (errores.Count > 0)
+    {
+        args.IsValid = false;
+        cvContraseña.ErrorMessage = "La contraseña debe contener: " + string.Join(", ", errores);
+    }
+    else
+    {
+        args.IsValid = true;
+    }
+}
+⬆️ FIN DEL MÉTODO NUEVO ⬆️
+```
+
+### ✏️ **Modificaciones en `btnRegistrar_Click`**
+
+**ANTES:**
+```csharp
+protected void btnRegistrar_Click(object sender, EventArgs e)
+{
+    string nombre= txtNombre.Text.Trim();
+    string primerApellido= txtPrimerApellido.Text.Trim();
+    string segundoApellido = txtSegundoApellido.Text.Trim();
+    string correo = txtEmail.Text.Trim();
+    string codigo= txtCodigo.Text.Trim();
+    string contraseña1= txtContraseña.Text.Trim();
+    string contraseña2= txtConfirmarContraseña.Text.Trim();
+    string fechaActividad = DateTime.Now.ToString("yyyy-MM-dd");
+    if (contraseña1 == contraseña2)
+    {
+        if (!chkTerminos.Checked)
+        {
+            lblError.Text = "Debes aceptar los términos y condiciones.";
+            return;
+        }
+        else
+        {
+            int resultado = personaSoap.insertarPersona(nombre, primerApellido,segundoApellido, codigo, correo, contraseña1, 
+                nombre + primerApellido + segundoApellido, fechaActividad);
+            if (resultado == 0)
+            {
+                lblError.Text = "No se pudo registrar al usuario";
+                return;
+            }
+            lblError.Text = ""; 
+            Response.Redirect("../Login/LoginInicio.aspx");
+        }
+    }
+    else
+    {
+        // Mostrar mensaje de error
+        ClientScript.RegisterStartupScript(this.GetType(), "alert", "alert('Las contraseñas no coinciden');", true);
+    }
+}
+```
+
+**DESPUÉS:**
+```csharp
+protected void btnRegistrar_Click(object sender, EventArgs e)
+{
+    ⬇️ ESTAS LÍNEAS SON NUEVAS ⬇️
+    // Validar que la página sea válida antes de proceder
+    if (!Page.IsValid)
+    {
+        lblError.Text = "Por favor, corrija los errores del formulario.";
+        return;
+    }
+    ⬆️ FIN DE LO NUEVO ⬆️
+
+    string nombre = txtNombre.Text.Trim();
+    string primerApellido = txtPrimerApellido.Text.Trim();
+    string segundoApellido = txtSegundoApellido.Text.Trim();
+    string correo = txtEmail.Text.Trim();
+    string codigo = txtCodigo.Text.Trim();
+    string contraseña1 = txtContraseña.Text.Trim();
+    string contraseña2 = txtConfirmarContraseña.Text.Trim();
+    string fechaActividad = DateTime.Now.ToString("yyyy-MM-dd");
+
+    ⬇️ SIMPLIFICADO (antes era if-else anidado) ⬇️
+    // Validar términos y condiciones
+    if (!chkTerminos.Checked)
+    {
+        lblError.Text = "Debes aceptar los términos y condiciones.";
+        return;
+    }
+
+    // Las contraseñas ya se validaron con CompareValidator, pero por seguridad:
+    if (contraseña1 != contraseña2)
+    {
+        lblError.Text = "Las contraseñas no coinciden.";
+        return;
+    }
+
+    ⬇️ AGREGADO TRY-CATCH PARA MEJOR MANEJO DE ERRORES ⬇️
+    try
+    {
+        int resultado = personaSoap.insertarPersona(nombre, primerApellido, segundoApellido, 
+            codigo, correo, contraseña1, nombre + primerApellido + segundoApellido, fechaActividad);
+        
+        if (resultado == 0)
+        {
+            lblError.Text = "No se pudo registrar al usuario. Intente nuevamente.";  ⬅️ MENSAJE MEJORADO
+            return;
+        }
+
+        lblError.Text = "";
+        Response.Redirect("../Login/LoginInicio.aspx");
+    }
+    catch (Exception ex)
+    {
+        lblError.Text = "Error al registrar: " + ex.Message;
+    }
+    ⬆️ FIN DEL TRY-CATCH ⬆️
+}
+```
+
+---
+
+## 📋 Resumen de cambios:
+
+### `.aspx`:
+1. ✅ Agregado `onkeyup="validarPasswordJS()"` al TextBox de contraseña
+2. ✅ Agregado `<div id="mensajePassword">` para feedback visual
+3. ✅ Agregado `RequiredFieldValidator` para contraseña
+4. ✅ Agregado `CustomValidator` para validación de requisitos
+5. ✅ Agregado `CompareValidator` para confirmar contraseña
+6. ✅ Agregado script JavaScript completo al final
+
+### `.aspx.cs`:
+1. ✅ Agregado `using System.Text.RegularExpressions;`
+2. ✅ Agregado método `ValidarContraseña()` completo
+3. ✅ Agregado validación `if (!Page.IsValid)` al inicio de `btnRegistrar_Click`
+4. ✅ Simplificado el flujo de if-else anidados
+5. ✅ Agregado try-catch para mejor manejo de errores
+6. ✅ Eliminado el `ClientScript.RegisterStartupScript` (ya no es necesario)
+
+¿Te queda más claro ahora? 😊
